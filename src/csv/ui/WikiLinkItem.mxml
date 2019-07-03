@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="30" >
+	
+	<fx:Script>
+		<![CDATA[
+			import flash.net.navigateToURL;
+			
+			import protobuf.LinkVO;
+			
+			private var _data:LinkVO;
+			
+			public function set data(value:LinkVO):void
+			{
+				this._data=value;
+				btnLabel.label = value.title;
+				btnLabel.toolTip=value.url;
+			}
+			public function get data():LinkVO{
+				return _data;
+			}
+			
+			protected function btnLabel_clickHandler(event:MouseEvent):void
+			{
+				var url:String=encodeURI(_data.url);
+				navigateToURL(new URLRequest(url));
+			}
+			
+			protected function codeBtn_clickHandler(event:MouseEvent):void
+			{
+				dispatchEvent(event);
+			}
+		
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Button id="btnLabel" width="100%" height="100%" label="对战房间接口" chromeColor="#515C6B" color="#FFFFFF"
+			  click="btnLabel_clickHandler(event)" fontFamily="Tahoma" fontSize="12" 
+			  textDecoration="underline"/>
+	<s:Button id="codeBtn" width="90" height="100%" label="生成代码" click="codeBtn_clickHandler(event)" color="#FFFFFF" chromeColor="#FF7F02" fontWeight="bold"
+			  fontFamily="Tahoma" fontSize="12"/>
+	
+</s:HGroup>

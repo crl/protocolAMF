@@ -1,0 +1,14 @@
+[
+	{
+		"name":"chess",
+		"cLang":"ts",
+		"sLang":"ts",
+        "domain":"http://lingyuwiki.com/chess/",
+		"rootUrl":"doku.php?id=协议接口",
+		"commonUrl":"doku.php?id=通信dto对象",
+
+		"clientPath":"e:/chess/MyNet/",
+		"serverPath":"e:/chess/proto/",
+		"serverBatPath":"e:/chess/proto/run.bat"
+	}
+]

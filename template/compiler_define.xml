@@ -1,0 +1,23 @@
+﻿<?xml version="1.0"?>
+
+<!-- //crl -load-config+=../template/const_config.xml 对于此文件的更改,必须刷新项目,因为builder内部好像做了缓存,暂无方法传随机参; 
+	-define=CONFIG::debugging,true -define=CONFIG::release, false -keep-as3-metadata+=Inject -->
+
+<flex-config>
+	<compiler>
+		<keep-as3-metadata append="true">
+			<name>Inject</name>
+		</keep-as3-metadata>
+
+		<define>
+			<name>CONFIG::debugging</name>
+			<value>true</value>
+		</define>
+
+		<define>
+			<name>CONFIG::release</name>
+			<value>false</value>
+		</define>
+		
+	</compiler>
+</flex-config>

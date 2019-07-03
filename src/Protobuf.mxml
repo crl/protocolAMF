@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+					   xmlns:s="library://ns.adobe.com/flex/spark"
+					   xmlns:mx="library://ns.adobe.com/flex/mx"
+					   xmlns:ui="csv.ui.*"
+					   width="1000" height="850"
+					   creationComplete="creationCompleteHandler(event)"
+					   showStatusBar="true" 
+					   >
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		/* style applied on all buttons  */
+		
+	</fx:Style>
+	<fx:Script>
+		<![CDATA[
+			import com.OpenFile;
+			
+			import csv.TortoiseProc;
+			import csv.WikiPageInfo;
+			import csv.core.Loger;
+			import csv.ui.CButton;
+			import csv.ui.WikiLinkItem;
+			
+			import mx.controls.Alert;
+			import mx.effects.easing.Back;
+			import mx.events.FlexEvent;
+			
+			import protobuf.CatchWikiMsg;
+			import protobuf.DicGen;
+			import protobuf.LinkVO;
+			import protobuf.PageGen;
+			import protobuf.ProjectVO;
+			import protobuf.WikiPageLoader;
+			
+			CONFIG::release
+			{
+				import com.youbt.air.utils.AutoUpdater;
+				public static const UPDATE_VERSION_XML:String="http://192.168.1.51/tools/Protobuf/update2.xml";
+				private var updater:AutoUpdater;
+			}
+			
+			private var catchRoot:WikiPageLoader = new WikiPageLoader();
+			private var catchTool:CatchWikiMsg = new CatchWikiMsg();
+			private var configFullPath:String;
+			private var urls:Vector.<LinkVO> = new Vector.<LinkVO>();
+			private var currentProject:ProjectVO;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				
+				CONFIG::release
+				{
+					updater=new AutoUpdater(UPDATE_VERSION_XML);
+					updater.reCheck();
+					
+					var xml:XML=NativeApplication.nativeApplication.applicationDescriptor;
+					var ns:Namespace=xml.namespace();
+					this.title="Protobuf:" + String(xml.ns::versionNumber);
+				}
+				
+				this.enabled=true;
+				Loger.init(log); 
+				
+				this.addEventListener(NativeDragEvent.NATIVE_DRAG_ENTER, nativeDragEnterHandler);
+				this.addEventListener(NativeDragEvent.NATIVE_DRAG_DROP, nativeDragDropHandler);
+				
+				
+				var bytes:ByteArray=EncryptedLocalStore.getItem("configFullPath");
+				configFullPath=bytes.readUTF();
+				if(configFullPath){
+					this.pathTF.text=configFullPath;
+					
+					var file:File=File.applicationDirectory.resolvePath(configFullPath);
+					if(file.exists){					
+						loadProjectConfig(file,true);
+					}
+				}
+				
+			}
+			protected function nativeDragEnterHandler(event:NativeDragEvent):void
+			{
+				var clip:Clipboard=event.clipboard;
+				var list:Array=clip.getData(ClipboardFormats.FILE_LIST_FORMAT) as Array;
+				var file:File=list[0];
+				if(file.extension!="json"){
+					return;
+				}
+				NativeDragManager.acceptDragDrop(this);
+			}
+			
+			protected function nativeDragDropHandler(event:NativeDragEvent):void
+			{
+				var clip:Clipboard=event.clipboard;
+				var list:Array=clip.getData(ClipboardFormats.FILE_LIST_FORMAT) as Array;
+				var file:File=list[0];
+				
+				if(loadProjectConfig(file)){
+					configFullPath=file.url;
+					pathTF.text=configFullPath;
+					
+					saveProjectPathClick(event);
+				}
+			}
+			
+			private function loadProjectConfig(configsFile:File,autoSelected:Boolean=true):Boolean
+			{
+				var str:String = OpenFile.openAsTxt(configsFile);
+				var arr:Array;
+				try
+				{
+					arr = JSON.parse(str) as Array;
+				} 
+				catch(error:Error) 
+				{
+					Alert.show("json解析失败");
+					return false;
+				}
+				
+				projectGroup.removeAllElements();
+				
+				var button:CButton;
+				for each (var proObj:Object in arr) 
+				{
+					button = new CButton();
+					button.label=proObj.name;
+					
+					var vo:ProjectVO = new ProjectVO();
+					vo.parse(proObj);
+					
+					button.data=vo;
+					button.addEventListener(MouseEvent.CLICK,openProject,false,0,true);
+					
+					projectGroup.addElement(button);
+				}
+				
+				if(arr.length == 1 && autoSelected)
+				{
+					//如果项目只有1个，直接选择
+					button.dispatchEvent(new MouseEvent(MouseEvent.CLICK));
+				}
+				
+				return true;
+			}
+			
+			protected function openProject(event:MouseEvent):void
+			{
+				var btn:CButton=event.target as CButton;
+				var vo:ProjectVO = btn.data as ProjectVO;
+				if(!vo){
+					return;
+				}
+				
+				currentProject = vo;
+				
+				title = currentProject.name;
+				CONFIG::release
+				{
+					var xml:XML=NativeApplication.nativeApplication.applicationDescriptor;
+					var ns:Namespace=xml.namespace();
+					this.title="Protobuf "+title+":" + String(xml.ns::versionNumber);
+				}
+				
+				var projectDir:String = File.applicationDirectory.resolvePath("assets/exe/protobuf-net/").nativePath;
+				projectDir += File.separator + currentProject.name + File.separator;
+				ProjectVO.PROTO_OUTPUT_DIR = projectDir;
+				
+				viewstack1.selectedIndex = 1;
+				if(processText)
+				{
+					processText.text = "";
+				}
+				
+				//cs
+				var clientSvnPath:String = currentProject.clientPath;
+				var file:File=new File(clientSvnPath);
+				if( file.exists && currentProject.hasSVN){
+					//更新message包
+					this.enabled=false;
+					TortoiseProc.progress(projectHandle,"/command:update","/path:"+clientSvnPath);
+				}
+				
+				onReloadClick(event);
+			}
+			
+			private function next():void
+			{
+				if(urls.length == 0)
+				{
+					Alert.show("生成好了","提示");
+					return;
+				}
+				
+				var linkVO:LinkVO = urls.shift();
+				
+				if(!catchTool.isProcess)
+				{
+					process(url);
+					catchTool.load(currentProject,linkVO,onCatchHandler);
+				}
+			}
+			
+			private function projectHandle(name:String,event:Event):void{
+				this.enabled=true;
+			}
+			
+			protected function onAllClick(event:MouseEvent):void
+			{
+				clearLog();
+				
+				if(rootPageInfo != null)
+				{
+					var serverGen:DicGen=new DicGen();
+					serverGen.run(currentProject,rootPageInfo);
+				}
+			}
+			
+			private function process(filePath:String):void
+			{
+				toggleStatus(catchTool.isProcess);
+				
+			}
+			
+			private function onCatchHandler(pageInfo:WikiPageInfo):void
+			{
+				toggleStatus(catchTool.isProcess);
+				
+				if(pageInfo){
+					//生成c#代码
+					var gen:PageGen=new PageGen();
+					gen.run(currentProject,pageInfo,projectHandle);
+				}
+				next();
+			}
+			
+			private function toggleStatus(process:Boolean):void
+			{
+				if(process)
+				{
+					svnBtn.enabled = false;
+				}else if(currentProject.hasSVN){
+					svnBtn.enabled = true;
+				}
+			}
+			
+			
+			private function log(str:String,level:int=0):void
+			{
+				if(processText)
+				{
+					if(level ==-1){
+						str="<font color='#ff0000'><b>"+str+"</b></font>"
+					}
+					
+					processText.htmlText += str + "\n";
+					processText.verticalScrollPosition=processText.maxVerticalScrollPosition;
+				}
+				
+				trace(str);
+			}
+			
+			private function clearLog():void
+			{
+				if(processText)
+				{
+					processText.text = "";
+					processText.verticalScrollPosition=processText.maxVerticalScrollPosition;
+				}
+			}
+			
+			protected function onBackClick(event:MouseEvent):void
+			{
+				viewstack1.selectedIndex = 0;
+				
+				var file:File=File.applicationDirectory.resolvePath(configFullPath);
+				if(file.exists){					
+					loadProjectConfig(file,false);
+				}
+			}
+			
+			private function copyProjectConfigHandle(event:Event):void{
+				
+			}
+			
+			protected function onSvnClick(event:MouseEvent):void
+			{
+				TortoiseProc.progress(projectHandle,"/command:commit","/path:"+currentProject.clientPath);
+			}
+			
+			protected function onProjectClick(event:MouseEvent):void
+			{
+				//修改project.js
+				
+				var file:File = File.applicationDirectory.resolvePath(configFullPath);
+				file.openWithDefaultApplication();
+			}
+			protected function onReadMeClick(event:MouseEvent):void
+			{
+				//修改project.js
+				var file:File = File.applicationDirectory.resolvePath("data/README.md");
+				file.openWithDefaultApplication();
+			}
+			
+			protected function createNew(event:MouseEvent):void
+			{
+				var file:File= File.applicationDirectory.resolvePath("data/protobufEditor.json");
+				if(file.exists){
+					var xml:String=OpenFile.openAsTxt(file);
+					var ref:FileReference=new FileReference();
+					ref.save(xml,"protobufEditor.json");
+				}
+			}
+			
+			private var rootPageInfo:WikiPageInfo;
+			private function onRootHandle(pageInfo:WikiPageInfo):void
+			{
+				wikiLinkGroup.removeAllElements();
+				
+				this.svnBtn.enabled=this.currentProject.hasSVN;
+				
+				this.rootPageInfo = pageInfo;
+				if(this.rootPageInfo==null){
+					Alert.show("没有设置主页");
+					return;
+				}
+				
+				var keys:Array=pageInfo.linkDic.getKeyArray().concat();
+				for each(var key:String in keys) 
+				{
+					//删除掉过滤的页面;
+					if(currentProject.filterTitle(key)==false){
+						pageInfo.linkDic.dele(key);
+						continue;
+					}
+					
+					var linkVO:LinkVO=pageInfo.linkDic.get(key);
+					var linkItem:WikiLinkItem = new WikiLinkItem();
+					linkItem.data=linkVO;
+					linkItem.addEventListener(MouseEvent.CLICK,onCodeBtnClick);
+					wikiLinkGroup.addElement(linkItem);
+				}
+			}
+			
+			protected function onCodeBtnClick(event:MouseEvent):void
+			{
+				var item:WikiLinkItem = event.target as WikiLinkItem;
+				if(item==null){
+					return;
+				}
+				
+				var linkVO:LinkVO=item.data;
+				
+				clearLog();
+				
+				urls.length = 0;
+				
+				var c:LinkVO=currentProject.commonUrl;
+				if(c && event.shiftKey){
+					urls.push(currentProject.commonUrl);
+				}
+				urls.push(linkVO);
+				
+				next();
+			}
+			
+			protected function onReloadClick(event:MouseEvent):void
+			{
+				//wikiLinkGroup.removeAllElements();
+				catchRoot.load(currentProject.rootUrl,onRootHandle);
+			}
+			
+			protected function onClientClick(event:MouseEvent):void
+			{
+				var file:File = File.applicationDirectory.resolvePath(currentProject.clientPath);
+				if(file.exists==false){
+					Alert.show("路径不存在:"+file.url);
+					return;
+				}
+				file.openWithDefaultApplication();
+			}
+			
+			protected function onServerClick(event:Event):void
+			{
+				var file:File = File.applicationDirectory.resolvePath(currentProject.serverPath);
+				if(file.exists==false){
+					Alert.show("路径不存在:"+file.url);
+					return;
+				}
+				file.openWithDefaultApplication();
+			}
+			
+			protected function saveProjectPathClick(event:Event):void
+			{
+				if(!configFullPath){
+					return;
+				}
+				var bytes:ByteArray=new ByteArray();
+				bytes.writeUTF(configFullPath);
+				EncryptedLocalStore.setItem("configFullPath",bytes);
+			}
+			
+			protected function openProjectPathClick(event:Event):void
+			{
+				var path:String=pathTF.text;
+				if(!path){
+					return;
+				}
+				var file:File=File.applicationDirectory.resolvePath(path);
+				if(file.exists==false){
+					Alert.show("路径不存在!");
+					return;
+				}
+				file.parent.openWithDefaultApplication();
+			}
+			
+			protected function onProtoClick(event:MouseEvent):void
+			{
+				var path:String="assets/exe/protobuf-net/"+currentProject.name;
+				var file:File=File.applicationDirectory.resolvePath(path);
+				if(file.exists==false){
+					Alert.show("路径不存在!");
+				}
+				file.openWithDefaultApplication();
+			}
+			
+			protected function onsTempClick(event:MouseEvent):void
+			{
+				var file:File=File.applicationDirectory.resolvePath(currentProject.sTemplate);
+				if(file.exists==false){
+					Alert.show("路径不存在!");
+				}
+				file.openWithDefaultApplication();
+			}
+			protected function oncTempClick(event:MouseEvent):void
+			{
+				var file:File=File.applicationDirectory.resolvePath(currentProject.cTemplate);
+				if(file.exists==false){
+					Alert.show("路径不存在!");
+				}
+				file.openWithDefaultApplication();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<mx:ViewStack id="viewstack1" width="100%" height="100%">
+		<s:NavigatorContent width="100%" height="100%" label="projects">
+			<s:VGroup width="100%" height="100%" gap="10">
+				<s:Label width="100%" height="50" text="选择一个项目" fontFamily="Tahoma" textAlign="center" verticalAlign="middle" color="#FFFFFF" backgroundColor="#515C6B"/>
+				<s:Scroller width="100%" height="100%" >
+					<s:VGroup id="projectGroup" width="100%" height="100%"
+							  horizontalAlign="center" verticalAlign="top">
+					</s:VGroup>
+				</s:Scroller>
+				
+				<s:SkinnableContainer  width="100%" height="50" backgroundColor="#515C6B">
+					<s:layout>
+						<s:HorizontalLayout gap="10" paddingLeft="10" paddingRight="10" paddingTop="10" paddingBottom="10" />
+					</s:layout>
+					<s:Label height="100%" text="项目配置路径:" color="#FFFFFF" verticalAlign="middle"/>
+					<s:TextInput height="100%" id="pathTF" width="100%" editable="false" />
+					<s:Button height="100%" width="50" label="open" click="openProjectPathClick(event)" />
+					<s:Button height="100%" width="80" label="create" click="createNew(event)" color="#FFFFFF" chromeColor="#FF7F02" />
+				</s:SkinnableContainer >
+			</s:VGroup>
+		</s:NavigatorContent>
+		<s:NavigatorContent width="100%" height="100%" label="视图 1">
+			<s:HGroup height="100%" width="100%" paddingLeft="5" paddingRight="5" paddingTop="5" paddingBottom="5">
+				<s:VGroup  width="370" height="100%">
+					<s:Scroller  width="100%" height="100%">
+						<s:VGroup id="wikiLinkGroup" 
+								  horizontalAlign="left" width="100%" height="100%">
+						</s:VGroup>
+					</s:Scroller>
+					
+					<s:Button id="reloadRootBtn" width="100%" height="25" label="重新获取列表" click="onReloadClick(event)"/>
+					<s:HGroup width="100%" height="25">
+						<s:Button width="50%"  height="100%" label="提交svn" click="onSvnClick(event)" fontSize="12" id="svnBtn" color="#FFFFFF" chromeColor="#FF7F02"/>
+						<s:Button width="50%" height="100%" label="*生成全部协议配置" click="onAllClick(event)" color="#FFFFFF" chromeColor="#FF7F02"/>
+					</s:HGroup>
+					<s:HGroup width="100%" height="25">
+						<s:Button width="100%" height="25" label="编辑配置" click="onProjectClick(event)"/>
+						<s:Button width="100" height="25" label="README" click="onReadMeClick(event)"/>
+					</s:HGroup>
+					<s:HGroup width="100%" height="25">
+						<s:Button width="50%"  height="100%" label="打开proto" click="onProtoClick(event)" fontSize="12" />
+						<s:Button width="50%" height="100%" label="客户端tpl" click="oncTempClick(event)"/>
+						<s:Button width="50%" height="100%" label="服务端tpl" click="onsTempClick(event)"/>
+					</s:HGroup>
+					
+					<s:HGroup width="100%" height="25">
+						<s:Button width="100%" height="100%" label="项目列表" click="onBackClick(event)"/>	
+						<s:Button width="80" height="100%" label="客户端C" click="onClientClick(event)"/>
+						<s:Button width="80" height="100%" label="服务端S" click="onServerClick(event)"/>
+					</s:HGroup>
+					
+				</s:VGroup>
+				
+				<s:VGroup width="100%" height="100%">
+					<mx:TextArea id="processText" width="100%" height="100%"
+								 fontFamily="tahoma" fontSize="12"  textAlign="left"/>
+				</s:VGroup>
+			</s:HGroup>
+			
+		</s:NavigatorContent>
+		
+	</mx:ViewStack>
+</s:WindowedApplication>
