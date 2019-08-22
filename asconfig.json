@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"output": "bin-debug/Protobuf.swf",
+		"accessible": true,
+		"source-path": [
+			"src",
+			"${DOCUMENTS}/RFAirV3/src"
+		],
+		"library-path": [
+			"libs"
+		]
+	},
+	"files": [
+		"src/Protobuf.mxml"
+	],
+	"application": "src/Protobuf-app.xml",
+	"copySourcePathAssets": true,
+	"additionalOptions": "-load-config+=template/compiler_define.xml"
+}
