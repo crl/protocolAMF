@@ -17,15 +17,15 @@
 		<![CDATA[
 			import com.OpenFile;
 			
+			import mx.controls.Alert;
+			import mx.effects.easing.Back;
+			import mx.events.FlexEvent;
+			
 			import csv.TortoiseProc;
 			import csv.WikiPageInfo;
 			import csv.core.Loger;
 			import csv.ui.CButton;
 			import csv.ui.WikiLinkItem;
-			
-			import mx.controls.Alert;
-			import mx.effects.easing.Back;
-			import mx.events.FlexEvent;
 			
 			import protobuf.CatchWikiMsg;
 			import protobuf.DicGen;
@@ -164,7 +164,7 @@
 					this.title="Protobuf "+title+":" + String(xml.ns::versionNumber);
 				}
 				
-				var projectDir:String = File.applicationDirectory.resolvePath("assets/exe/protobuf-net/").nativePath;
+				var projectDir:String = ProjectVO.GetTempFile().nativePath;
 				projectDir += File.separator + currentProject.name + File.separator;
 				ProjectVO.PROTO_OUTPUT_DIR = projectDir;
 				
@@ -421,7 +421,8 @@
 				var path:String="assets/exe/protobuf-net/"+currentProject.name;
 				var file:File=File.applicationDirectory.resolvePath(path);
 				if(file.exists==false){
-					Alert.show("路径不存在!");
+					Alert.show("路径不存在!"+file.url);
+					return;
 				}
 				file.openWithDefaultApplication();
 			}
@@ -430,7 +431,8 @@
 			{
 				var file:File=File.applicationDirectory.resolvePath(currentProject.sTemplate);
 				if(file.exists==false){
-					Alert.show("路径不存在!");
+					Alert.show("路径不存在!"+file.url);
+					return;
 				}
 				file.openWithDefaultApplication();
 			}
@@ -438,7 +440,8 @@
 			{
 				var file:File=File.applicationDirectory.resolvePath(currentProject.cTemplate);
 				if(file.exists==false){
-					Alert.show("路径不存在!");
+					Alert.show("路径不存在!"+file.url);
+					return;
 				}
 				file.openWithDefaultApplication();
 			}

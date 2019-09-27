@@ -7,6 +7,8 @@ package csv
 	
 	import csv.tpl.TplVO;
 	
+	import protobuf.ProjectVO;
+	
 	public class NodeJsExec
 	{
 		public static var C:int=0;
@@ -50,8 +52,8 @@ package csv
 		}
 		
 		private static function getNodejsConfigPath():String{
-			
-			var file:File=File.applicationDirectory.resolvePath("data/nodeCFG.json");
+			var proFile:File=ProjectVO.GetTempFile();
+			var file:File=proFile.resolvePath("data/nodeCFG.json");
 			return file.nativePath;
 		}
 		

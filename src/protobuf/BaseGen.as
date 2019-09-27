@@ -19,9 +19,10 @@ package protobuf
 		}
 		
 		
-		public function buildTPPL(serviceName:String,jsonData:TplDataVO,subfix:String=""):void
+		public function buildTPPL(serviceName:String,jsonData:TplDataVO):void
 		{	
 			var templatesPrefix:String;
+			var prefix:String="data/templates/";
 			var side:String="client/";
 			
 			templatesPrefix=projectVO.cTemplate;
@@ -35,7 +36,7 @@ package protobuf
 				return;
 			}
 			var file:File;
-			file= File.applicationDirectory.resolvePath(templatesPrefix+subfix);
+			file= File.applicationDirectory.resolvePath(prefix+side+templatesPrefix);
 			if(file.exists==false){
 				Loger.log("路径下不存在自动处理:"+file.url)
 				return;
@@ -63,7 +64,6 @@ package protobuf
 				
 				count++;
 				var data:TplVO=new TplVO();
-				data.subfix=subfix;
 				data.fileName=name;
 				data.serviceName=serviceName;
 				data.jsonData=jsonData;
@@ -104,9 +104,7 @@ package protobuf
 			}
 			
 			var prefix:String=folder;
-			if(cfg.subfix){
-				prefix+=cfg.subfix+"/";
-			}
+
 			if(list.length>1){
 				fileName=list.pop();
 				prefix+=list.join("/");

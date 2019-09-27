@@ -21,10 +21,10 @@ var App = /** @class */ (function () {
 }());
 exports.App = App;
 if (process && process.argv.length > 3) {
-    //console.log("begin js");
+    console.log("begin js");
     var tp = process.argv[2];
     var cfg = process.argv[3];
-    //console.log(tp,cfg);
+    console.log(tp,cfg);
     var buf = fs.readFileSync(cfg);
     var json = JSON.parse(buf.toString("utf-8"));
     buf = fs.readFileSync(tp);

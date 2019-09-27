@@ -34,21 +34,21 @@ package protobuf
 			
 			var folder:String = currentProject.clientPath;
 			
-			var messsageFolderFile:File = new File(folder + "message/");
+			/*var messsageFolderFile:File = new File(folder + "message/");
 			if(!messsageFolderFile.exists)
 			{
 				messsageFolderFile.createDirectory();
-			}
+			}*/
 			
 			//生成protobuf msg
-			var protoName:String=pageInfo.getProtoName();
+			/*var protoName:String=pageInfo.getProtoName();
 			Protogen.progress(projectHandle,
 				"-i:"+ProjectVO.PROTO_OUTPUT_DIR+protoName,
 				"-o:"+folder + "message/"+ serviceName+".cs",
 				"-p:detectMissing",
 				"-ns:gameSDK"
 			);
-			Loger.log("protobuff:写入"+folder + "message/"+ serviceName+".cs",1);
+			Loger.log("protobuff:写入"+folder + "message/"+ serviceName+".cs",1);*/
 			
 			
 			var sList:Vector.<WikiMsgHeader>=new Vector.<WikiMsgHeader>();

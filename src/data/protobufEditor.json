@@ -1,8 +1,8 @@
 [
 	{
 		"name":"chess",
-		"cLang":"ts",
-		"sLang":"ts",
+		"cTemplate":"ts",
+		"sTemplate":"ts",
         "domain":"http://lingyuwiki.com/chess/",
 		"rootUrl":"doku.php?id=协议接口",
 		"commonUrl":"doku.php?id=通信dto对象",

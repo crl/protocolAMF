@@ -1,9 +1,18 @@
 package protobuf
 {
+	import flash.filesystem.File;
+
 	public class ProjectVO
 	{
 		public static var PROTO_OUTPUT_DIR:String;
 		public static var PBMsgDict:String="PBMsgDict.json";
+		
+		
+		public static function GetTempFile():File{
+			var f:File=File.documentsDirectory.resolvePath("protobuff");
+			
+			return f; 
+		}
 		
 		//项目名 
 		public var name:String;
