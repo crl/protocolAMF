@@ -1,9 +1,10 @@
 package protobuf
 {
 	import com.OpenFile;
-	import com.sociodox.utils.Base64;
 	
-	import csv.CmdInfo;
+	import flash.filesystem.File;
+	import flash.utils.Dictionary;
+	
 	import csv.NodeJsExec;
 	import csv.Protogen;
 	import csv.WikiMsgHeader;
@@ -11,13 +12,6 @@ package protobuf
 	import csv.core.Loger;
 	import csv.proto.Type2Number;
 	import csv.tpl.TplDataVO;
-	
-	import flash.events.DataEvent;
-	import flash.filesystem.File;
-	import flash.utils.ByteArray;
-	import flash.utils.Dictionary;
-	
-	import spark.primitives.Path;
 	
 	public class PageGen extends BaseGen
 	{

@@ -1,24 +1,15 @@
 package protobuf
 {
 	import com.OpenFile;
-	import com.sociodox.utils.Base64;
 	
-	import csv.CMDExec;
-	import csv.NodeJsExec;
+	import flash.filesystem.File;
+	
+	import mx.controls.Alert;
+	
 	import csv.WikiMsgHeader;
 	import csv.WikiPageInfo;
 	import csv.core.Loger;
-	import csv.proto.ProtoField;
 	import csv.proto.Type2Number;
-	import csv.tpl.TplDataVO;
-	
-	import flash.events.Event;
-	import flash.filesystem.File;
-	import flash.utils.ByteArray;
-	import flash.utils.Dictionary;
-	
-	import mx.controls.Alert;
-	import mx.utils.StringUtil;
 	
 	import utlis.HashList;
 	

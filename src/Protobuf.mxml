@@ -68,7 +68,9 @@
 				
 				
 				var bytes:ByteArray=EncryptedLocalStore.getItem("configFullPath");
-				configFullPath=bytes.readUTF();
+				if(bytes){
+					configFullPath=bytes.readUTF();
+				}
 				if(configFullPath){
 					this.pathTF.text=configFullPath;
 					

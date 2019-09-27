@@ -1,21 +1,14 @@
 package csv
 {
-	import com.sociodox.utils.Base64;
-	
-	import csv.core.Loger;
-	
 	import flash.desktop.NativeProcess;
-	import flash.desktop.NativeProcessStartupInfo;
-	import flash.events.DataEvent;
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;
 	import flash.events.NativeProcessExitEvent;
 	import flash.events.ProgressEvent;
-	import flash.utils.ByteArray;
 	
-	import mx.states.OverrideBase;
-	import mx.utils.Base64Decoder;
 	import mx.utils.StringUtil;
+	
+	import csv.core.Loger;
 	
 	public class NativeProcessExt extends NativeProcess
 	{

@@ -1,23 +1,11 @@
 package csv
 {
 	import com.OpenFile;
-	import com.sociodox.utils.Base64;
 	
-	import csv.core.Loger;
-	import csv.tpl.TplVO;
-	
-	import flash.desktop.NativeProcess;
 	import flash.desktop.NativeProcessStartupInfo;
-	import flash.events.DataEvent;
-	import flash.events.Event;
-	import flash.events.NativeProcessExitEvent;
-	import flash.events.ProgressEvent;
 	import flash.filesystem.File;
-	import flash.utils.ByteArray;
 	
-	import mx.logging.Log;
-	import mx.utils.Base64Decoder;
-	import mx.utils.StringUtil;
+	import csv.tpl.TplVO;
 	
 	public class NodeJsExec
 	{
@@ -97,20 +85,16 @@ package csv
 		}
 	}
 }
-import com.sociodox.utils.Base64;
+import flash.desktop.NativeProcessStartupInfo;
+import flash.events.NativeProcessExitEvent;
+import flash.events.ProgressEvent;
+import flash.utils.ByteArray;
 
 import csv.NativeProcessExt;
 import csv.core.Loger;
 import csv.tpl.TplVO;
 
-import flash.desktop.NativeProcessStartupInfo;
-import flash.events.Event;
-import flash.events.NativeProcessExitEvent;
-import flash.events.ProgressEvent;
-import flash.utils.ByteArray;
-
-import mx.utils.Base64Decoder;
-import mx.utils.StringUtil;
+import utlis.Base64;
 
 class NativeProcessNode extends NativeProcessExt{	
 	public var data:TplVO;
